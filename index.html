@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Déjà Vu</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: rgba(255,255,255,0.07);
+    --accent: #e63946;
+    --accent2: #ff6b6b;
+    --gold: #f4c542;
+    --text: #f0f0f5;
+    --muted: #6b6b80;
+    --glow: rgba(230,57,70,0.25);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; top:-50%; left:-50%; width:200%; height:200%;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(230,57,70,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 80% 80%, rgba(100,80,200,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 60% 10%, rgba(244,197,66,0.04) 0%, transparent 60%);
+    animation: bgPulse 8s ease-in-out infinite alternate;
+    pointer-events:none; z-index:0;
+  }
+
+  body::after {
+    content:''; position:fixed; inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:0; opacity:0.4;
+  }
+
+  @keyframes bgPulse {
+    0%   { transform:translate(0,0) rotate(0deg); }
+    100% { transform:translate(2%,2%) rotate(2deg); }
+  }
+
+  /* ── SCREENS ── */
+  .screen { display:none; position:relative; z-index:1; min-height:100vh; padding:0 0 40px; }
+  .screen.active { display:block; }
+
+  /* ══════════════════════════════════
+     HOME
+  ══════════════════════════════════ */
+  .hero {
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding: 32px 20px 22px;
+    position:relative;
+  }
+
+  .hero-left { text-align:left; }
+
+  .logo {
+    font-family:'Playfair Display',serif;
+    font-size:clamp(44px,12vw,68px); font-weight:900;
+    line-height:0.9; letter-spacing:-2px;
+    animation:fadeUp 0.5s ease 0.08s both;
+  }
+  .logo span { color:var(--accent); }
+
+  .logo-sub {
+    font-size:clamp(9px,2.2vw,11px); font-weight:300;
+    letter-spacing:4px; color:var(--muted); margin-top:8px;
+    text-transform:uppercase; display:block;
+    animation:fadeUp 0.5s ease 0.15s both;
+  }
+
+  /* ── LANGUAGE TOGGLE ── */
+  .lang-toggle {
+    display:flex; gap:6px; flex-shrink:0;
+    animation:fadeUp 0.5s ease 0.2s both;
+    padding-top:4px;
+  }
+
+  .lang-pill {
+    border-radius:100px; padding:7px 13px;
+    font-size:11px; font-weight:600; letter-spacing:1px;
+    cursor:pointer; border:1px solid var(--border);
+    background:transparent; color:var(--muted);
+    transition:all 0.2s; -webkit-tap-highlight-color:transparent;
+    display:flex; align-items:center; gap:5px;
+  }
+  .lang-pill.active {
+    background:rgba(230,57,70,0.12); border-color:rgba(230,57,70,0.4);
+    color:var(--accent2);
+  }
+  .lang-pill:not(.active):hover { color:var(--text); border-color:rgba(255,255,255,0.15); }
+
+  /* ── HOW TO PLAY ── */
+  .how-to-play {
+    margin:0 16px 22px; background:var(--surface);
+    border:1px solid var(--border); border-radius:20px; padding:20px;
+    animation:fadeUp 0.5s ease 0.25s both;
+    position:relative; overflow:hidden;
+  }
+  .how-to-play::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent); opacity:0.5;
+  }
+
+  .section-label {
+    font-size:9px; font-weight:600; letter-spacing:3px;
+    text-transform:uppercase; color:var(--accent); margin-bottom:14px;
+  }
+
+  .how-steps { display:flex; flex-direction:column; gap:12px; }
+  .step { display:flex; align-items:flex-start; gap:12px; }
+  .step-num {
+    width:24px; height:24px; border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),#c1121f);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; flex-shrink:0;
+    box-shadow:0 3px 10px var(--glow);
+  }
+  .step-text { font-size:13px; color:#c0c0d0; line-height:1.5; padding-top:2px; }
+  .step-text strong { color:var(--text); font-weight:600; }
+
+  /* ── CATEGORIES ── */
+  .categories-section { padding:0 16px; animation:fadeUp 0.5s ease 0.35s both; }
+  .categories-section .section-label { margin-bottom:10px; }
+  .category-subtitle { font-size:10px; color:var(--muted); letter-spacing:1px; margin-bottom:12px; text-transform:uppercase; }
+  .categories-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+
+  .cat-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:16px 13px; cursor:pointer;
+    transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    position:relative; overflow:hidden;
+    user-select:none; -webkit-tap-highlight-color:transparent;
+  }
+  .cat-card::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg,rgba(230,57,70,0.1),transparent);
+    opacity:0; transition:opacity 0.2s; border-radius:inherit;
+  }
+  .cat-card.selected { border-color:var(--accent); background:rgba(230,57,70,0.08); transform:scale(1.02); }
+  .cat-card.selected::before { opacity:1; }
+  .cat-card.selected .check { opacity:1; transform:scale(1); }
+
+  .check {
+    position:absolute; top:7px; right:7px; width:17px; height:17px;
+    border-radius:50%; background:var(--accent);
+    display:flex; align-items:center; justify-content:center; font-size:9px;
+    opacity:0; transform:scale(0.4); transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .cat-icon { font-size:24px; margin-bottom:7px; display:block; filter:drop-shadow(0 2px 5px rgba(0,0,0,0.3)); }
+  .cat-name { font-size:11px; font-weight:500; color:var(--text); }
+
+  /* ── START BUTTON ── */
+  .start-wrap { padding:20px 16px 0; animation:fadeUp 0.5s ease 0.45s both; }
+
+  .btn-start {
+    width:100%; padding:16px;
+    background:linear-gradient(135deg,var(--accent),#c1121f);
+    border:none; border-radius:14px; color:#fff;
+    font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600;
+    letter-spacing:3px; text-transform:uppercase; cursor:pointer;
+    transition:all 0.2s; position:relative; overflow:hidden;
+    box-shadow:0 8px 28px var(--glow); -webkit-tap-highlight-color:transparent;
+  }
+  .btn-start::before {
+    content:''; position:absolute; top:0; left:-100%; width:100%; height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
+    transition:left 0.5s;
+  }
+  .btn-start:hover::before { left:100%; }
+  .btn-start:active { transform:scale(0.98); }
+  .btn-start:disabled { opacity:0.3; cursor:not-allowed; box-shadow:none; }
+
+  /* ══════════════════════════════════
+     GAME
+  ══════════════════════════════════ */
+  .game-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 18px 0; animation:fadeDown 0.4s ease both;
+  }
+
+  .back-btn {
+    width:38px; height:38px; border-radius:12px;
+    background:var(--surface); border:1px solid var(--border);
+    color:var(--text); font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; -webkit-tap-highlight-color:transparent; transition:all 0.18s;
+  }
+  .back-btn:active { transform:scale(0.91); }
+
+  .score-pill {
+    display:flex; align-items:center; gap:6px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:100px; padding:7px 14px; font-size:12px; font-weight:600;
+  }
+  .score-val { color:var(--gold); font-size:14px; font-weight:700; }
+
+  .lives-display { display:flex; gap:3px; font-size:17px; }
+
+  /* ── PROGRESS (correct-answer based) ── */
+  .progress-wrap { padding:14px 18px 0; animation:fadeDown 0.4s ease 0.05s both; }
+
+  .progress-info {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:10px; color:var(--muted); margin-bottom:7px;
+    letter-spacing:1px; text-transform:uppercase;
+  }
+  .progress-info .round-num { font-weight:700; color:var(--text); font-size:12px; }
+
+  .progress-bar {
+    height:4px; background:var(--surface2); border-radius:100px; overflow:hidden;
+  }
+  .progress-fill {
+    height:100%; width:0%;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border-radius:100px;
+    transition:width 0.5s cubic-bezier(0.4,0,0.2,1);
+    box-shadow:0 0 8px var(--accent);
+  }
+
+  /* milestone flash */
+  @keyframes milestoneFlash {
+    0%   { box-shadow:0 0 0px var(--accent); }
+    50%  { box-shadow:0 0 18px var(--accent); }
+    100% { box-shadow:0 0 8px var(--accent); }
+  }
+  .progress-fill.milestone { animation:milestoneFlash 0.5s ease; }
+
+  .streak-badge {
+    display:none; margin:10px 18px 0;
+    background:linear-gradient(135deg,rgba(244,197,66,0.15),rgba(244,197,66,0.05));
+    border:1px solid rgba(244,197,66,0.3); border-radius:12px;
+    padding:8px 14px; font-size:12px; font-weight:600; color:var(--gold);
+    text-align:center;
+  }
+  .streak-badge.visible { display:block; animation:popIn 0.3s ease; }
+  @keyframes popIn { 0%{transform:scale(0.92)} 60%{transform:scale(1.03)} 100%{transform:scale(1)} }
+
+  /* ── WORD CARD ── */
+  .word-card-wrap { padding:16px 18px; animation:fadeDown 0.4s ease 0.1s both; }
+
+  .word-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:22px; padding:42px 22px; text-align:center;
+    position:relative; overflow:hidden; min-height:185px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    transition:border-color 0.25s, box-shadow 0.25s, background 0.25s;
+  }
+  .word-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent); opacity:0.4;
+  }
+  .word-card.flash-correct { border-color:#2d9e6b; box-shadow:0 0 36px rgba(45,158,107,0.22); background:rgba(45,158,107,0.06); }
+  .word-card.flash-wrong   { border-color:var(--accent); box-shadow:0 0 36px var(--glow); background:rgba(230,57,70,0.06); animation:shake 0.38s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+
+  .word-cat-tag { font-size:9px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:16px; }
+
+  .word-display {
+    font-family:'Playfair Display',serif;
+    font-size:clamp(32px,8.5vw,48px); font-weight:700;
+    letter-spacing:-1px; line-height:1.1; color:var(--text);
+  }
+  .word-display.flip { animation:wordFlip 0.28s ease; }
+  @keyframes wordFlip {
+    0%  {opacity:1;transform:translateY(0)}
+    40% {opacity:0;transform:translateY(-10px)}
+    60% {opacity:0;transform:translateY(10px)}
+    100%{opacity:1;transform:translateY(0)}
+  }
+
+  /* bottom-right: round counter */
+  .word-round {
+    position:absolute; bottom:13px; right:16px;
+    font-size:11px; color:var(--muted);
+  }
+  .word-round b { color:var(--accent); }
+
+  /* ── ANSWER BUTTONS ── */
+  .answer-btns {
+    display:grid; grid-template-columns:1fr 1fr; gap:11px;
+    padding:0 18px; animation:fadeUp 0.4s ease 0.15s both;
+  }
+
+  .btn-answer {
+    border:1px solid var(--border); border-radius:14px; padding:17px 12px;
+    font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600;
+    cursor:pointer; transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    -webkit-tap-highlight-color:transparent;
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+  }
+  .btn-answer:active { transform:scale(0.96); }
+
+  .btn-seen { background:rgba(45,158,107,0.1); color:#4ade80; border-color:rgba(45,158,107,0.25); }
+  .btn-seen:hover { background:rgba(45,158,107,0.18); border-color:rgba(45,158,107,0.5); box-shadow:0 8px 22px rgba(45,158,107,0.15); }
+
+  .btn-new { background:rgba(230,57,70,0.1); color:var(--accent2); border-color:rgba(230,57,70,0.25); }
+  .btn-new:hover { background:rgba(230,57,70,0.18); border-color:rgba(230,57,70,0.5); box-shadow:0 8px 22px var(--glow); }
+
+  .btn-icon { font-size:20px; }
+
+  /* ── TOAST ── */
+  .result-toast {
+    position:fixed; top:50%; left:50%;
+    transform:translate(-50%,-50%) scale(0.8);
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:18px; padding:20px 36px; text-align:center;
+    z-index:100; opacity:0;
+    transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none;
+  }
+  .result-toast.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .result-toast .t-emoji { font-size:36px; }
+  .result-toast .t-text  { font-size:13px; font-weight:600; margin-top:5px; }
+  .result-toast .t-pts   { font-size:21px; font-weight:700; color:var(--gold); margin-top:2px; }
+
+  /* ══════════════════════════════════
+     RESULT SCREEN
+  ══════════════════════════════════ */
+  .result-inner { padding:54px 20px 40px; text-align:center; }
+  .result-icon { font-size:66px; margin-bottom:12px; }
+  .result-title { font-family:'Playfair Display',serif; font-size:32px; font-weight:700; margin-bottom:5px; }
+  .result-sub   { font-size:13px; color:var(--muted); margin-bottom:32px; }
+
+  .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:26px; }
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 8px; }
+  .stat-val   { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; color:var(--gold); }
+  .stat-lbl   { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-top:4px; }
+
+  .btn-again {
+    width:100%; padding:16px;
+    background:linear-gradient(135deg,var(--accent),#c1121f);
+    border:none; border-radius:14px; color:#fff;
+    font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600;
+    letter-spacing:3px; text-transform:uppercase; cursor:pointer;
+    transition:all 0.2s; box-shadow:0 8px 28px var(--glow); margin-bottom:9px;
+  }
+  .btn-again:active { transform:scale(0.98); }
+
+  .btn-menu {
+    width:100%; padding:12px; background:transparent;
+    border:1px solid var(--border); border-radius:14px;
+    color:var(--muted); font-family:'DM Sans',sans-serif;
+    font-size:12px; font-weight:500; cursor:pointer; transition:all 0.2s;
+  }
+  .btn-menu:hover { color:var(--text); border-color:rgba(255,255,255,0.15); }
+
+  /* ── CATEGORY BEST SCORES ── */
+  .cat-scores-section {
+    padding: 0 16px;
+    animation: fadeUp 0.5s ease 0.55s both;
+  }
+
+  .cat-scores-section .section-label { margin-bottom: 12px; }
+
+  .cat-score-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .cat-score-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .cat-score-row::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent), #c1121f);
+    border-radius: 3px 0 0 3px;
+  }
+
+  .cat-score-rank {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .cat-score-rank.top1 { color: #f5c518; }
+  .cat-score-rank.top2 { color: #b0bec8; }
+  .cat-score-rank.top3 { color: #cd7f32; }
+
+  .cat-score-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.3));
+  }
+
+  .cat-score-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cat-score-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cat-score-bar-wrap {
+    margin-top: 4px;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .cat-score-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 100px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .cat-score-pts {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .cat-scores-empty {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 16px 0 8px;
+    letter-spacing: 0.5px;
+  }
+
+  /* confetti */
+  .confetti-dot {
+    position:fixed; width:7px; height:7px; border-radius:2px;
+    pointer-events:none; z-index:200;
+    animation:fall var(--dur) var(--delay) ease-in forwards;
+  }
+  @keyframes fall {
+    0%  {opacity:1;transform:translate(0,-20px) rotate(0deg)}
+    100%{opacity:0;transform:translate(var(--tx),100vh) rotate(var(--rot))}
+  }
+
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-9px)}  to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<!-- ══ HOME ══ -->
+<div class="screen active" id="homeScreen">
+
+  <div class="hero">
+    <div class="hero-left">
+      <div class="logo">DÉJÀ <span>VU</span>
+        <span class="logo-sub" id="logoSub">Hafıza &amp; Tanıma Oyunu</span>
+      </div>
+    </div>
+
+    <!-- LANGUAGE TOGGLE -->
+    <div class="lang-toggle">
+      <button class="lang-pill active" id="pillTR" onclick="setLang('tr')">🇹🇷 TR</button>
+      <button class="lang-pill"        id="pillEN" onclick="setLang('en')">🇬🇧 EN</button>
+    </div>
+  </div>
+
+  <div class="how-to-play">
+    <div class="section-label" id="howLabel">Nasıl Oynanır?</div>
+    <div class="how-steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text" id="step1"></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text" id="step2"></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text" id="step3"></div></div>
+    </div>
+  </div>
+
+  <div class="categories-section">
+    <div class="section-label" id="catLabel"></div>
+    <div class="category-subtitle" id="catSub"></div>
+    <div class="categories-grid" id="catGrid"></div>
+  </div>
+
+  <div class="start-wrap">
+    <button class="btn-start" id="startBtn" onclick="startGame()" disabled>
+      <span id="startBtnTxt"></span>
+    </button>
+  </div>
+
+  <!-- CATEGORY BEST SCORES -->
+  <div class="cat-scores-section" id="catScoresSection" style="display:none; margin-top:20px;">
+    <div class="section-label" id="catScoresLabel">En İyi Kategoriler</div>
+    <div class="cat-score-list" id="catScoreList"></div>
+  </div>
+
+</div>
+
+<!-- ══ GAME ══ -->
+<div class="screen" id="gameScreen">
+  <div class="game-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="score-pill">
+      ⭐ <span class="score-val" id="scoreVal">0</span>
+      <span style="color:var(--muted)" id="ptsLbl">puan</span>
+    </div>
+    <div class="lives-display" id="livesEl">❤️❤️❤️</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="roundLbl">Tur 1</span>
+      <span id="streakLbl" style="color:var(--gold)"></span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <div class="streak-badge" id="streakBadge"></div>
+
+  <div class="word-card-wrap">
+    <div class="word-card" id="wordCard">
+      <div class="word-cat-tag" id="wordCat">–</div>
+      <div class="word-display"  id="wordEl">–</div>
+      <div class="word-round"    id="wordRound"></div>
+    </div>
+  </div>
+
+  <div class="answer-btns">
+    <button class="btn-answer btn-seen" onclick="answer('seen')">
+      <span class="btn-icon">✅</span><span id="btnSeen">Gördüm</span>
+    </button>
+    <button class="btn-answer btn-new" onclick="answer('new')">
+      <span class="btn-icon">✨</span><span id="btnNew">İlk Defa</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div class="screen" id="resultScreen">
+  <div class="result-inner">
+    <div class="result-icon" id="resIcon">🎉</div>
+    <div class="result-title" id="resTitle">Tebrikler!</div>
+    <div class="result-sub"   id="resSub"></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" id="stScore">0</div><div class="stat-lbl" id="stScoreLbl"></div></div>
+      <div class="stat-card"><div class="stat-val" id="stCorrect">0</div><div class="stat-lbl" id="stCorrectLbl"></div></div>
+      <div class="stat-card"><div class="stat-val" id="stStreak">0</div><div class="stat-lbl" id="stStreakLbl"></div></div>
+    </div>
+    <button class="btn-again" onclick="startGame()"><span id="btnAgain">Tekrar Oyna →</span></button>
+    <button class="btn-menu"  onclick="goHome()">   <span id="btnMenu">Ana Menü</span></button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="result-toast" id="toast">
+  <div class="t-emoji" id="tEmoji"></div>
+  <div class="t-text"  id="tText"></div>
+  <div class="t-pts"   id="tPts"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   TRANSLATIONS
+═══════════════════════════════════════ */
+const T = {
+  tr: {
+    badge:'Yeni Oyun', sub:'Hafıza & Tanıma Oyunu',
+    howLabel:'Nasıl Oynanır?',
+    s1:'Ekranda bir kelime belirir. Bu kelimeyi <strong>daha önce gördün mü?</strong>',
+    s2:'<strong>Gördüm</strong> veya <strong>İlk Defa</strong> butonuna bas.',
+    s3:'3 hata hakkın var. Doğru tahmin <strong>+10 puan</strong>. Seri = <strong>bonus puan!</strong>',
+    catLabel:'Kategori Seç', catSub:'Bir veya birden fazla',
+    startBtn:'Oyunu Başlat →',
+    pts:'puan', btnSeen:'Gördüm', btnNew:'İlk Defa',
+    round:'Tur', streakSfx:'seri',
+    stBadge:(n,b)=>`🔥 ${n} Seri! +${b} bonus`,
+    ok:'Doğru!', wrong:'Yanlış!', wrongPts:'-1 ❤️',
+    great:'Muhteşem!', greatSub:p=>`%${p} doğruluk — efsane!`,
+    good:'Tebrikler!',  goodSub: p=>`%${p} doğruluk — iyi iş!`,
+    meh:'Devam Et!',    mehSub:  p=>`%${p} doğruluk — tekrar dene!`,
+    lScore:'Toplam Puan', lCorrect:'Doğru', lStreak:'En İyi Seri',
+    again:'Tekrar Oyna →', menu:'Ana Menü',
+  },
+  en: {
+    badge:'New Game', sub:'Memory & Recognition Game',
+    howLabel:'How to Play?',
+    s1:'A word appears. Have you <strong>seen it before?</strong>',
+    s2:'Press <strong>Seen It</strong> or <strong>First Time</strong>.',
+    s3:'You have 3 lives. Correct = <strong>+10 pts</strong>. Streak = <strong>bonus!</strong>',
+    catLabel:'Choose Category', catSub:'One or more',
+    startBtn:'Start Game →',
+    pts:'pts', btnSeen:'Seen It', btnNew:'First Time',
+    round:'Round', streakSfx:'streak',
+    stBadge:(n,b)=>`🔥 ${n} Streak! +${b} bonus`,
+    ok:'Correct!', wrong:'Wrong!', wrongPts:'-1 ❤️',
+    great:'Incredible!', greatSub:p=>`${p}% accuracy — legendary!`,
+    good:'Well Done!',   goodSub: p=>`${p}% accuracy — great job!`,
+    meh:'Keep Going!',   mehSub:  p=>`${p}% accuracy — try again!`,
+    lScore:'Total Score', lCorrect:'Correct', lStreak:'Best Streak',
+    again:'Play Again →', menu:'Main Menu',
+  }
+};
+
+/* ═══════════════════════════════════════
+   WORD DATA
+═══════════════════════════════════════ */
+const CATS = {
+  tr:{
+    fruits:  {icon:'🍎',label:'Sebze & Meyveler',   words:['Elma','Muz','Çilek','Portakal','Karpuz','Kiraz','Üzüm','Armut','Mandalina','Kavun','Şeftali','Nar','İncir','Erik','Kivi','Ananas','Limon','Avokado','Mango','Papaya','Ahududu','Böğürtlen','Maracuja','Guava','Hurma','Zeytin','Greyfurt','Vişne','Kayısı','Muşmula']},
+    jobs:    {icon:'👷',label:'Meslekler',           words:['Doktor','Mühendis','Öğretmen','Avukat','Aşçı','Pilot','Hemşire','Mimar','Polis','Çiftçi','Müzisyen','Ressam','Gazeteci','Veteriner','Eczacı','Hakim','Dişçi','Terzi','Tamirci','Fotoğrafçı','Aktör','Yönetmen','Psikolog','Astronot','Biyolog','Kimyager','Matematikçi','Ekonomist','Diplomat','Çevirmen']},
+    countries:{icon:'🌍',label:'Ülkeler',            words:['Türkiye','Almanya','Fransa','İtalya','İspanya','Japonya','Brezilya','Arjantin','Meksika','Kanada','Avustralya','Mısır','Hindistan','Çin','Rusya','Portekiz','Yunanistan','İsviçre','Hollanda','Belçika','Polonya','İsveç','Norveç','Danimarka','Finlandiya','Avusturya','Macaristan','Romanya','Ukrayna','Endonezya']},
+    cities:  {icon:'🏙️',label:'Şehirler',           words:['İstanbul','Ankara','İzmir','Bursa','Antalya','Paris','Londra','Berlin','Roma','Tokyo','New York','Sidney','Dubai','Barselona','Amsterdam','Viyana','Prag','Lizbon','Seoul','Singapur','Şanghay','Los Angeles','Chicago','Toronto','Melbourne','Cape Town','Mumbai','Kahire','Buenos Aires','Lagos']},
+    numbers: {icon:'🔢',label:'Sayılar',             words:['Bir','İki','Üç','Dört','Beş','Altı','Yedi','Sekiz','Dokuz','On','On Bir','On İki','On Beş','Yirmi','Otuz','Kırk','Elli','Altmış','Yetmiş','Seksen','Doksan','Yüz','İki Yüz','Bin','On Bin','Sıfır','Yüz Bin','Milyon','Milyar','Trilyon']},
+    animals: {icon:'🦁',label:'Hayvanlar',           words:['Aslan','Kaplan','Fil','Zürafa','Zebra','Penguen','Yunus','Kurt','Ayı','Tilki','Tavşan','Sincap','Kaplumbağa','Yılan','Kartal','Baykuş','Timsah','Leopar','Gergedan','Şempanze','Goril','Jaguar','Panda','Kanguru','Koala','Flamingo','Pelikan','Balina','Ahtapot','Denizatı']},
+    sports:  {icon:'⚽',label:'Sporlar',             words:['Futbol','Basketbol','Tenis','Yüzme','Atletizm','Voleybol','Boks','Güreş','Bisiklet','Kayak','Satranç','Golf','Rugby','Beyzbol','Judo','Karate','Okçuluk','Kürek','Yelken','Hentbol','Badminton','Masa Tenisi','Triatlon','Eskrim','Buz Pateni','Snowboard','Jimnastik','Su Polosu','Kano','Oryantiring']},
+    colors:  {icon:'🎨',label:'Renkler & Şekiller',  words:['Kırmızı','Mavi','Yeşil','Sarı','Turuncu','Mor','Pembe','Kahverengi','Gri','Beyaz','Kare','Daire','Üçgen','Dikdörtgen','Elips','Beşgen','Altıgen','Yıldız','Kalp','Baklava','Turkuaz','Lacivert','Bej','Mercan','Altın','Gümüş','Bronz','Leylak','Zümrüt','Safir']},
+  },
+  en:{
+    fruits:  {icon:'🍎',label:'Fruits & Vegetables', words:['Apple','Banana','Strawberry','Orange','Watermelon','Cherry','Grapes','Pear','Tangerine','Melon','Peach','Pomegranate','Fig','Plum','Kiwi','Pineapple','Lemon','Avocado','Mango','Papaya','Raspberry','Blackberry','Blueberry','Passion Fruit','Guava','Date','Olive','Grapefruit','Apricot','Quince']},
+    jobs:    {icon:'👷',label:'Professions',          words:['Doctor','Engineer','Teacher','Lawyer','Chef','Pilot','Nurse','Architect','Police','Farmer','Musician','Painter','Journalist','Vet','Pharmacist','Judge','Dentist','Tailor','Mechanic','Photographer','Actor','Director','Psychologist','Astronaut','Biologist','Chemist','Mathematician','Economist','Diplomat','Translator']},
+    countries:{icon:'🌍',label:'Countries',           words:['Turkey','Germany','France','Italy','Spain','Japan','Brazil','Argentina','Mexico','Canada','Australia','Egypt','India','China','Russia','Portugal','Greece','Switzerland','Netherlands','Belgium','Poland','Sweden','Norway','Denmark','Finland','Austria','Hungary','Romania','Ukraine','Indonesia','South Africa']},
+    cities:  {icon:'🏙️',label:'Cities',              words:['Istanbul','Ankara','Izmir','Paris','London','Berlin','Rome','Tokyo','New York','Sydney','Dubai','Barcelona','Amsterdam','Vienna','Prague','Lisbon','Seoul','Singapore','Shanghai','Los Angeles','Chicago','Toronto','Melbourne','Cape Town','Mumbai','Cairo','Buenos Aires','Lagos','Moscow','Bangkok']},
+    numbers: {icon:'🔢',label:'Numbers',              words:['One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Fifteen','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety','Hundred','Two Hundred','Thousand','Ten Thousand','Zero','Hundred Thousand','Million','Billion','Trillion']},
+    animals: {icon:'🦁',label:'Animals',              words:['Lion','Tiger','Elephant','Giraffe','Zebra','Penguin','Dolphin','Wolf','Bear','Fox','Rabbit','Squirrel','Turtle','Snake','Eagle','Owl','Crocodile','Leopard','Rhino','Chimpanzee','Gorilla','Jaguar','Panda','Kangaroo','Koala','Flamingo','Pelican','Whale','Octopus','Seahorse']},
+    sports:  {icon:'⚽',label:'Sports',               words:['Football','Basketball','Tennis','Swimming','Athletics','Volleyball','Boxing','Wrestling','Cycling','Skiing','Chess','Golf','Rugby','Baseball','Judo','Karate','Archery','Rowing','Sailing','Handball','Badminton','Table Tennis','Triathlon','Fencing','Ice Skating','Snowboard','Gymnastics','Water Polo','Canoeing','Orienteering']},
+    colors:  {icon:'🎨',label:'Colors & Shapes',      words:['Red','Blue','Green','Yellow','Orange','Purple','Pink','Brown','Gray','White','Square','Circle','Triangle','Rectangle','Ellipse','Pentagon','Hexagon','Star','Heart','Diamond','Turquoise','Navy','Beige','Coral','Gold','Silver','Bronze','Lilac','Emerald','Sapphire']},
+  }
+};
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let lang = 'tr';
+let selectedCats = new Set();
+let wordPool = [];
+let seenWords = new Set();
+let score=0, lives=3, streak=0, bestStreak=0, correct=0, total=0;
+let busy=false, current=null;
+
+// Per-category best scores: { catKey: { score, label, icon } }
+let catBestScores = JSON.parse(localStorage.getItem('dv_catBest') || '{}');
+
+const MILESTONE = 10;
+
+/* ═══════════════════════════════════════
+   LANGUAGE
+═══════════════════════════════════════ */
+function setLang(l) {
+  lang = l;
+  document.getElementById('pillTR').classList.toggle('active', l==='tr');
+  document.getElementById('pillEN').classList.toggle('active', l==='en');
+  applyUI();
+  buildGrid();
+  selectedCats.clear();
+  document.querySelectorAll('.cat-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('startBtn').disabled = true;
+}
+
+function applyUI() {
+  const t = T[lang];
+  document.getElementById('logoSub').textContent   = t.sub;
+  document.getElementById('howLabel').textContent   = t.howLabel;
+  document.getElementById('step1').innerHTML = t.s1;
+  document.getElementById('step2').innerHTML = t.s2;
+  document.getElementById('step3').innerHTML = t.s3;
+  document.getElementById('catLabel').textContent   = t.catLabel;
+  document.getElementById('catSub').textContent     = t.catSub;
+  document.getElementById('startBtnTxt').textContent= t.startBtn;
+  document.getElementById('ptsLbl').textContent     = t.pts;
+  document.getElementById('btnSeen').textContent    = t.btnSeen;
+  document.getElementById('btnNew').textContent     = t.btnNew;
+  document.getElementById('stScoreLbl').textContent = t.lScore;
+  document.getElementById('stCorrectLbl').textContent=t.lCorrect;
+  document.getElementById('stStreakLbl').textContent = t.lStreak;
+  document.getElementById('btnAgain').textContent   = t.again;
+  document.getElementById('btnMenu').textContent    = t.menu;
+  document.getElementById('catScoresLabel').textContent = lang==='tr' ? 'En İyi Kategoriler' : 'Top Categories';
+  renderCatScores();
+}
+
+function buildGrid() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = '';
+  Object.entries(CATS[lang]).forEach(([key,cat])=>{
+    const d = document.createElement('div');
+    d.className='cat-card'; d.dataset.cat=key;
+    d.onclick=()=>toggleCat(d);
+    d.innerHTML=`<div class="check">✓</div><span class="cat-icon">${cat.icon}</span><div class="cat-name">${cat.label}</div>`;
+    grid.appendChild(d);
+  });
+}
+
+function toggleCat(el){
+  const k=el.dataset.cat;
+  if(selectedCats.has(k)){selectedCats.delete(k);el.classList.remove('selected');}
+  else{selectedCats.add(k);el.classList.add('selected');}
+  document.getElementById('startBtn').disabled = selectedCats.size===0;
+}
+
+/* ═══════════════════════════════════════
+   GAME
+═══════════════════════════════════════ */
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function buildPool(){
+  wordPool=[];
+  selectedCats.forEach(k=>{
+    CATS[lang][k].words.forEach(w=>wordPool.push({word:w,cat:CATS[lang][k].label}));
+  });
+  shuffle(wordPool);
+}
+
+// ── DIFFICULTY SYSTEM ──
+// - Minimum 4 farklı kelime arasında aynı kelime tekrar gelmez (cooldown)
+// - İlk 8 turda %80 yeni kelime (öğrenme fazı)
+// - Sonrasında tur ilerledikçe tekrar oranı artar → zorluk artar
+// - Havuz bitince yeniden karıştırılır ama cooldown korunur
+
+const COOLDOWN = 5;           // aynı kelime en az 5 farklı kelime sonra tekrar gelir
+let recentWords = [];         // son gösterilen kelimelerin kuyruğu
+let repeatQueue = [];         // tekrar sırası (shuffle'lı)
+
+function pickWord(){
+  const unseen = wordPool.filter(x => !seenWords.has(x.word) && !recentWords.includes(x.word));
+  const seenAvail = wordPool.filter(x => seenWords.has(x.word) && !recentWords.includes(x.word));
+
+  // Adaptif yeni/tekrar oranı: ilk 8 turda ağırlıklı yeni, sonra zorluk artar
+  const newRatio = total < 8 ? 0.82 : total < 16 ? 0.65 : total < 30 ? 0.50 : 0.40;
+
+  let entry;
+
+  if(unseen.length === 0 && seenAvail.length === 0){
+    // Cooldown doluysa tümünü sıfırla
+    recentWords = [];
+    const all = wordPool.filter(x => seenWords.has(x.word));
+    entry = all.length > 0
+      ? all[Math.floor(Math.random() * all.length)]
+      : wordPool[Math.floor(Math.random() * wordPool.length)];
+  } else if(seenAvail.length === 0 || Math.random() < newRatio){
+    // Yeni kelime ver
+    entry = unseen.length > 0
+      ? unseen[Math.floor(Math.random() * unseen.length)]
+      : seenAvail[Math.floor(Math.random() * seenAvail.length)];
+  } else {
+    // Tekrar ver (cooldown listesinde olmayan)
+    entry = seenAvail[Math.floor(Math.random() * seenAvail.length)];
+  }
+
+  // Cooldown kuyruğunu güncelle
+  recentWords.push(entry.word);
+  if(recentWords.length > COOLDOWN) recentWords.shift();
+
+  return entry;
+}
+
+function startGame(){
+  buildPool();
+  seenWords=new Set();
+  recentWords=[];
+  score=0; lives=3; streak=0; bestStreak=0; correct=0; total=0;
+  busy=false; current=null;
+  updateProgress(false);
+  showScreen('gameScreen');
+  updateHUD();
+  nextWord(false);
+}
+
+function nextWord(animate){
+  current = pickWord();
+  const el = document.getElementById('wordEl');
+  if(animate){ el.classList.add('flip'); setTimeout(()=>el.classList.remove('flip'),280); }
+  el.textContent = current.word;
+  document.getElementById('wordCat').textContent   = current.cat;
+  document.getElementById('wordRound').innerHTML   = `<b>${correct}</b> / ${T[lang].round}`;
+  document.getElementById('roundLbl').textContent  = `${T[lang].round} ${total+1}`;
+}
+
+// Progress bar fills with correct answers, resets every MILESTONE
+function updateProgress(milestone){
+  const pct = ((correct % MILESTONE) / MILESTONE) * 100;
+  const fill = document.getElementById('progressFill');
+  fill.style.width = pct+'%';
+  if(milestone){
+    fill.classList.remove('milestone');
+    void fill.offsetWidth; // reflow
+    fill.classList.add('milestone');
+  }
+}
+
+function updateHUD(){
+  const t=T[lang];
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('livesEl').textContent  = ['❤️','❤️','❤️'].map((h,i)=>i<lives?h:'🖤').join('');
+  document.getElementById('roundLbl').textContent = `${t.round} ${total+1}`;
+  document.getElementById('streakLbl').textContent= streak>=3?`🔥 ${streak} ${t.streakSfx}`:'';
+}
+
+function answer(choice){
+  if(busy||!current) return;
+  busy=true;
+  const t=T[lang];
+  const wasSeen = seenWords.has(current.word);
+  const ok = (choice==='seen'&&wasSeen)||(choice==='new'&&!wasSeen);
+  seenWords.add(current.word);
+  total++;
+
+  const card=document.getElementById('wordCard');
+
+  if(ok){
+    streak++; correct++;
+    if(streak>bestStreak) bestStreak=streak;
+    const pts=10+(streak>=3?(streak-2)*5:0);
+    score+=pts;
+    card.classList.add('flash-correct');
+    showStreakBadge();
+    toast('✅',t.ok,`+${pts}`);
+    const isMilestone = (correct % MILESTONE)===0;
+    updateProgress(isMilestone);
+  } else {
+    lives--; streak=0;
+    card.classList.add('flash-wrong');
+    hideStreakBadge();
+    toast('❌',t.wrong,t.wrongPts);
+    updateProgress(false);
+  }
+
+  updateHUD();
+
+  setTimeout(()=>{
+    card.classList.remove('flash-correct','flash-wrong');
+    if(lives<=0){ setTimeout(endGame,180); }
+    else{ nextWord(true); updateHUD(); }
+    busy=false;
+  },680);
+}
+
+function showStreakBadge(){
+  const b=document.getElementById('streakBadge');
+  if(streak>=3){
+    b.textContent=T[lang].stBadge(streak,(streak-2)*5);
+    b.classList.add('visible');
+  }
+}
+function hideStreakBadge(){ document.getElementById('streakBadge').classList.remove('visible'); }
+
+function toast(emoji,text,pts){
+  const el=document.getElementById('toast');
+  document.getElementById('tEmoji').textContent=emoji;
+  document.getElementById('tText').textContent=text;
+  document.getElementById('tPts').textContent=pts;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),620);
+}
+
+function endGame(){
+  const t=T[lang];
+  const pct=total>0?Math.round((correct/total)*100):0;
+  document.getElementById('stScore').textContent   = score;
+  document.getElementById('stCorrect').textContent = correct;
+  document.getElementById('stStreak').textContent  = bestStreak;
+  document.getElementById('stScoreLbl').textContent  = t.lScore;
+  document.getElementById('stCorrectLbl').textContent= t.lCorrect;
+  document.getElementById('stStreakLbl').textContent = t.lStreak;
+  document.getElementById('btnAgain').textContent  = t.again;
+  document.getElementById('btnMenu').textContent   = t.menu;
+
+  // Save per-category best scores (key = catKey, lang-agnostic)
+  if(score > 0 && selectedCats.size > 0){
+    selectedCats.forEach(catKey => {
+      const catData = CATS[lang][catKey];
+      const prev = catBestScores[catKey];
+      if(!prev || score > prev.score){
+        catBestScores[catKey] = {
+          score,
+          icon: catData.icon,
+          labelTR: CATS['tr'][catKey].label,
+          labelEN: CATS['en'][catKey].label
+        };
+      }
+    });
+    localStorage.setItem('dv_catBest', JSON.stringify(catBestScores));
+  }
+
+  if(pct>=80){
+    document.getElementById('resIcon').textContent ='🏆';
+    document.getElementById('resTitle').textContent= t.great;
+    document.getElementById('resSub').textContent  = t.greatSub(pct);
+    confetti();
+  } else if(pct>=60){
+    document.getElementById('resIcon').textContent ='🎉';
+    document.getElementById('resTitle').textContent= t.good;
+    document.getElementById('resSub').textContent  = t.goodSub(pct);
+  } else {
+    document.getElementById('resIcon').textContent ='😅';
+    document.getElementById('resTitle').textContent= t.meh;
+    document.getElementById('resSub').textContent  = t.mehSub(pct);
+  }
+  showScreen('resultScreen');
+}
+
+function renderCatScores(){
+  const section = document.getElementById('catScoresSection');
+  const list    = document.getElementById('catScoreList');
+
+  const entries = Object.entries(catBestScores);
+  if(entries.length === 0){
+    section.style.display = 'none';
+    return;
+  }
+
+  // Sort by score desc, take top 5
+  entries.sort((a,b) => b[1].score - a[1].score);
+  const top5 = entries.slice(0, 5);
+  const maxScore = top5[0][1].score;
+
+  const rankColors = ['top1','top2','top3','',''];
+  const rankLabels = ['1','2','3','4','5'];
+
+  list.innerHTML = top5.map(([key, data], i) => {
+    const label = lang === 'tr' ? data.labelTR : data.labelEN;
+    const barPct = Math.round((data.score / maxScore) * 100);
+    return `
+      <div class="cat-score-row">
+        <div class="cat-score-rank ${rankColors[i]}">${rankLabels[i]}</div>
+        <div class="cat-score-icon">${data.icon}</div>
+        <div class="cat-score-info">
+          <div class="cat-score-name">${label}</div>
+          <div class="cat-score-bar-wrap">
+            <div class="cat-score-bar" style="width:${barPct}%"></div>
+          </div>
+        </div>
+        <div class="cat-score-pts">${data.score}</div>
+      </div>
+    `;
+  }).join('');
+
+  section.style.display = 'block';
+}
+
+function goHome(){
+  showScreen('homeScreen');
+  hideStreakBadge();
+  renderCatScores();
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function confetti(){
+  const c=['#e63946','#f4c542','#4ade80','#60a5fa','#f472b6','#a78bfa'];
+  for(let i=0;i<45;i++){
+    const d=document.createElement('div'); d.className='confetti-dot';
+    d.style.cssText=`left:${Math.random()*100}vw;top:0;background:${c[i%c.length]};--dur:${0.8+Math.random()*0.9}s;--delay:${Math.random()*0.5}s;--tx:${-50+Math.random()*100}vw;--rot:${Math.random()*720}deg`;
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(),1600);
+  }
+}
+
+/* ── Init ── */
+// 1. Read ?lang= from URL (set by refo.games)
+(function(){
+  const p = new URLSearchParams(window.location.search).get('lang');
+  if(p === 'en' || p === 'tr') lang = p;
+  // Also sync toggle buttons before applyUI
+  document.getElementById('pillTR').classList.toggle('active', lang==='tr');
+  document.getElementById('pillEN').classList.toggle('active', lang==='en');
+})();
+
+applyUI();
+buildGrid();
+</script>
+</body>
+</html>
